@@ -1,41 +1,7 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List
+from typing import Dict
+def summary_agent(state: Dict):
 
-app = FastAPI()
-
-
-class LogEntry(BaseModel):
-    timestamp: str
-    service: str
-    level: str
-    message: str
-
-
-class IncidentRequest(BaseModel):
-    incidentId: str
-    logs: List[LogEntry]
-
-
-@app.post("/analyze")
-def analyze(request: IncidentRequest):
-
-    root_cause = "Unknown issue"
-    confidence = 40
-
-    for log in request.logs:
-
-        message = log.message.lower()
-
-        if "database" in message or "timeout" in message:
-
-            root_cause = "Database connection issue"
-            confidence = 92
-
-        elif "memory" in message or "heap" in message:
-
-            root_cause = "Memory issue"
-            confidence = 88
+    root_cause = state.get("root_cause")
 
     recommendations = []
 
@@ -61,9 +27,6 @@ def analyze(request: IncidentRequest):
             "Manual investigation required"
         ]
 
-    return {
-        "incidentId": request.incidentId,
-        "rootCause": root_cause,
-        "confidence": confidence,
-        "recommendations": recommendations
-    }
+    state["recommendations"] = recommendations
+
+    return state
